@@ -1,0 +1,7 @@
+{
+  "name": "销售军师 (Sales Strategist)",
+  "description": "A ToB sales and brand management AI assistant. Features calendar management, project kanban, daily voice reporting, and sharp AI analysis.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
