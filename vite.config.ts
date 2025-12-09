@@ -3,7 +3,12 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, '.', '');
+    // Load env from .env file (for local dev)
+    const fileEnv = loadEnv(mode, '.', '');
+
+    // Also check process.env for CI/CD environments (GitHub Actions)
+    const geminiKey = process.env.VITE_GEMINI_API_KEY || fileEnv.GEMINI_API_KEY || fileEnv.VITE_GEMINI_API_KEY || '';
+
     return {
       base: mode === 'production' ? '/sales-strategist/' : '/',
       server: {
@@ -12,8 +17,9 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [react()],
       define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+        // For legacy code that uses process.env
+        'process.env.API_KEY': JSON.stringify(geminiKey),
+        'process.env.GEMINI_API_KEY': JSON.stringify(geminiKey)
       },
       resolve: {
         alias: {
