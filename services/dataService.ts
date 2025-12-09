@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { getSupabase, isSupabaseConfigured } from './supabaseClient';
 import { Project, Task, OKR, ProgressEntry } from '../types';
 
 // ==================== 类型转换 ====================
@@ -51,7 +51,8 @@ const dbProgressToProgress = (row: any): ProgressEntry => ({
 // ==================== Projects ====================
 
 export const fetchProjects = async (): Promise<Project[]> => {
-  if (!isSupabaseConfigured()) return [];
+  const supabase = getSupabase();
+  if (!supabase) return [];
 
   const { data: projects, error } = await supabase
     .from('projects')
@@ -83,7 +84,8 @@ export const fetchProjects = async (): Promise<Project[]> => {
 };
 
 export const createProject = async (project: Project): Promise<Project | null> => {
-  if (!isSupabaseConfigured()) return project;
+  const supabase = getSupabase();
+  if (!supabase) return project;
 
   const { data, error } = await supabase
     .from('projects')
@@ -113,7 +115,8 @@ export const createProject = async (project: Project): Promise<Project | null> =
 };
 
 export const updateProject = async (project: Project): Promise<boolean> => {
-  if (!isSupabaseConfigured()) return true;
+  const supabase = getSupabase();
+  if (!supabase) return true;
 
   const { error } = await supabase
     .from('projects')
@@ -140,7 +143,8 @@ export const updateProject = async (project: Project): Promise<boolean> => {
 };
 
 export const deleteProject = async (projectId: string): Promise<boolean> => {
-  if (!isSupabaseConfigured()) return true;
+  const supabase = getSupabase();
+  if (!supabase) return true;
 
   const { error } = await supabase
     .from('projects')
@@ -157,7 +161,8 @@ export const deleteProject = async (projectId: string): Promise<boolean> => {
 // ==================== Progress Entries ====================
 
 export const addProgressEntry = async (projectId: string, entry: ProgressEntry): Promise<boolean> => {
-  if (!isSupabaseConfigured()) return true;
+  const supabase = getSupabase();
+  if (!supabase) return true;
 
   const { error } = await supabase
     .from('progress_entries')
@@ -180,7 +185,8 @@ export const addProgressEntry = async (projectId: string, entry: ProgressEntry):
 // ==================== Tasks ====================
 
 export const fetchTasks = async (): Promise<Task[]> => {
-  if (!isSupabaseConfigured()) return [];
+  const supabase = getSupabase();
+  if (!supabase) return [];
 
   const { data, error } = await supabase
     .from('tasks')
@@ -196,7 +202,8 @@ export const fetchTasks = async (): Promise<Task[]> => {
 };
 
 export const createTask = async (task: Task): Promise<Task | null> => {
-  if (!isSupabaseConfigured()) return task;
+  const supabase = getSupabase();
+  if (!supabase) return task;
 
   const { data, error } = await supabase
     .from('tasks')
@@ -220,7 +227,8 @@ export const createTask = async (task: Task): Promise<Task | null> => {
 };
 
 export const updateTask = async (task: Task): Promise<boolean> => {
-  if (!isSupabaseConfigured()) return true;
+  const supabase = getSupabase();
+  if (!supabase) return true;
 
   const { error } = await supabase
     .from('tasks')
@@ -240,7 +248,8 @@ export const updateTask = async (task: Task): Promise<boolean> => {
 };
 
 export const deleteTask = async (taskId: string): Promise<boolean> => {
-  if (!isSupabaseConfigured()) return true;
+  const supabase = getSupabase();
+  if (!supabase) return true;
 
   const { error } = await supabase
     .from('tasks')
@@ -257,7 +266,8 @@ export const deleteTask = async (taskId: string): Promise<boolean> => {
 // ==================== OKRs ====================
 
 export const fetchOkrs = async (): Promise<OKR[]> => {
-  if (!isSupabaseConfigured()) return [];
+  const supabase = getSupabase();
+  if (!supabase) return [];
 
   const { data: okrs, error: okrError } = await supabase
     .from('okrs')
@@ -284,7 +294,8 @@ export const fetchOkrs = async (): Promise<OKR[]> => {
 };
 
 export const upsertOkr = async (okr: OKR): Promise<boolean> => {
-  if (!isSupabaseConfigured()) return true;
+  const supabase = getSupabase();
+  if (!supabase) return true;
 
   // Upsert OKR
   const { error: okrError } = await supabase
@@ -330,7 +341,8 @@ export const upsertOkr = async (okr: OKR): Promise<boolean> => {
 };
 
 export const deleteOkr = async (okrId: string): Promise<boolean> => {
-  if (!isSupabaseConfigured()) return true;
+  const supabase = getSupabase();
+  if (!supabase) return true;
 
   const { error } = await supabase
     .from('okrs')

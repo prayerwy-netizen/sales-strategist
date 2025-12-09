@@ -1,10 +1,24 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ReportAnalysisResult, Project, ProjectStage, ClientType, Task, ProjectInsightResult, OKR } from "../types";
 
-// Initialize Gemini Client
-// NOTE: In a real app, never expose API keys on the client. 
-// This is for demonstration purposes using the provided runtime environment variable.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy initialization of Gemini Client to avoid errors when API key is not set
+let ai: GoogleGenAI | null = null;
+
+const getAI = (): GoogleGenAI => {
+  if (!ai) {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.API_KEY || '';
+    if (!apiKey) {
+      throw new Error('Gemini API Key 未配置，AI 功能暂不可用');
+    }
+    ai = new GoogleGenAI({ apiKey });
+  }
+  return ai;
+};
+
+export const isAIConfigured = (): boolean => {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.API_KEY || '';
+  return Boolean(apiKey);
+};
 
 const SYSTEM_INSTRUCTION_SHARP = `
 你是一个名为“销售军师”的ToB销售和品牌专家。你的风格非常直接、犀利、不留情面。
@@ -21,7 +35,7 @@ export const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
     // Convert Blob to Base64
     const base64Data = await blobToBase64(audioBlob);
 
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: 'gemini-2.5-flash',
       contents: {
         parts: [
@@ -116,7 +130,7 @@ export const analyzeDailyReport = async (
       };
     }
 
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
@@ -207,7 +221,7 @@ export const generateOKR = async (project: Project, existingOkr?: OKR, tasks?: T
       **重要：必须同时返回 objective 和 keyResults（至少3个）**
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
@@ -310,7 +324,7 @@ export const generateProjectInsight = async (project: Project, tasks: Task[], ok
       - 如果有过期任务要严厉指出
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
@@ -450,7 +464,7 @@ ${progressSummary}
 - projectUpdates只包含用户明确提到的新信息，没提到的字段不要包含
 - 如果信息还不够，继续追问，不要输出JSON`;
 
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: 'gemini-2.5-flash',
       contents: conversationHistory,
       config: {
@@ -559,7 +573,7 @@ ${progressSummary}
 
 保持简洁，每次回复不超过3句话。`;
 
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: 'gemini-2.5-flash',
       contents: conversationHistory,
       config: {
