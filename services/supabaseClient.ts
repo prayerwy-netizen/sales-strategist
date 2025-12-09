@@ -13,7 +13,14 @@ export const getSupabase = (): SupabaseClient | null => {
     return null;
   }
   if (!supabaseInstance) {
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        // 禁用自动 session 管理，因为此应用不需要用户认证
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false
+      }
+    });
   }
   return supabaseInstance;
 };
