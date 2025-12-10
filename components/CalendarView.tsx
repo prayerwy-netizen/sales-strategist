@@ -16,7 +16,7 @@ interface CalendarViewProps {
   okrs: OKR[];
   onToggleTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
-  onEditTask: (taskId: string, content: string, date: string) => void;
+  onEditTask: (taskId: string, content: string, date: string, krId?: string) => void;
   onAddTask?: (task: { content: string; date: string; projectId?: string; krId?: string }) => void;
 }
 
@@ -26,12 +26,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, projects, okrs, onTo
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editContent, setEditContent] = useState('');
   const [editDate, setEditDate] = useState('');
+  const [editKrId, setEditKrId] = useState<string>('');
+  const [isEditKrDropdownOpen, setIsEditKrDropdownOpen] = useState(false);
 
   // New task state
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskContent, setNewTaskContent] = useState('');
   const [newTaskProjectId, setNewTaskProjectId] = useState<string>('');
   const [newTaskKrId, setNewTaskKrId] = useState<string>('');
+  const [isNewKrDropdownOpen, setIsNewKrDropdownOpen] = useState(false);
 
   // Task detail chat state
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -75,13 +78,24 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, projects, okrs, onTo
     setEditingTask(task);
     setEditContent(task.content);
     setEditDate(task.date);
+    setEditKrId(task.krId || '');
+    setIsEditKrDropdownOpen(false);
   };
 
   const saveEditTask = () => {
     if (editingTask && editContent.trim()) {
-      onEditTask(editingTask.id, editContent.trim(), editDate);
+      onEditTask(editingTask.id, editContent.trim(), editDate, editKrId || undefined);
       setEditingTask(null);
+      setEditKrId('');
+      setIsEditKrDropdownOpen(false);
     }
+  };
+
+  // Get KRs for the task's project (for edit modal)
+  const getEditTaskKRs = () => {
+    if (!editingTask?.projectId) return [];
+    const okr = okrs.find(o => o.projectId === editingTask.projectId);
+    return okr?.keyResults || [];
   };
 
   // Open task detail with AI chat
@@ -199,6 +213,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, projects, okrs, onTo
     setNewTaskProjectId('');
     setNewTaskKrId('');
     setIsAddingTask(false);
+    setIsNewKrDropdownOpen(false);
   };
 
   // Get KRs for selected project
@@ -392,22 +407,51 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, projects, okrs, onTo
                                 </select>
                             </div>
 
-                            {/* KR Selection (only show if project selected) */}
+                            {/* KR Selection - Custom Dropdown */}
                             {newTaskProjectId && getProjectKRs(newTaskProjectId).length > 0 && (
                                 <div className="mb-3">
                                     <label className="text-xs text-gray-500 mb-1 block">关联KR（可选）</label>
-                                    <select
-                                        value={newTaskKrId}
-                                        onChange={(e) => setNewTaskKrId(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                    >
-                                        <option value="">不关联KR</option>
-                                        {getProjectKRs(newTaskProjectId).map(kr => (
-                                            <option key={kr.id} value={kr.id}>
-                                                {kr.content.length > 30 ? kr.content.slice(0, 30) + '...' : kr.content}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <div className="relative">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsNewKrDropdownOpen(!isNewKrDropdownOpen)}
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-left text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 flex items-center justify-between"
+                                        >
+                                            <span className="block truncate">
+                                                {newTaskKrId
+                                                    ? getProjectKRs(newTaskProjectId).find(kr => kr.id === newTaskKrId)?.content || '不关联KR'
+                                                    : '不关联KR'}
+                                            </span>
+                                            <svg className={`w-4 h-4 text-gray-400 transition-transform ${isNewKrDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                        {isNewKrDropdownOpen && (
+                                            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                <div
+                                                    onClick={() => {
+                                                        setNewTaskKrId('');
+                                                        setIsNewKrDropdownOpen(false);
+                                                    }}
+                                                    className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 ${!newTaskKrId ? 'bg-primary/10 text-primary' : 'text-gray-700'}`}
+                                                >
+                                                    不关联KR
+                                                </div>
+                                                {getProjectKRs(newTaskProjectId).map(kr => (
+                                                    <div
+                                                        key={kr.id}
+                                                        onClick={() => {
+                                                            setNewTaskKrId(kr.id);
+                                                            setIsNewKrDropdownOpen(false);
+                                                        }}
+                                                        className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 border-t border-gray-100 ${newTaskKrId === kr.id ? 'bg-primary/10 text-primary' : 'text-gray-700'}`}
+                                                    >
+                                                        <div className="leading-relaxed">{kr.content}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
 
@@ -418,6 +462,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, projects, okrs, onTo
                                         setNewTaskContent('');
                                         setNewTaskProjectId('');
                                         setNewTaskKrId('');
+                                        setIsNewKrDropdownOpen(false);
                                     }}
                                     className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-600 text-sm"
                                 >
@@ -556,10 +601,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, projects, okrs, onTo
       {/* Edit Task Modal */}
       {editingTask && (
         <div className="absolute inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center p-4 border-b border-gray-100">
               <h3 className="text-lg font-bold text-gray-800">编辑任务</h3>
-              <button onClick={() => setEditingTask(null)} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
+              <button onClick={() => { setEditingTask(null); setIsEditKrDropdownOpen(false); }} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
                 <X size={20} />
               </button>
             </div>
@@ -582,9 +627,56 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, projects, okrs, onTo
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
               </div>
+              {/* KR Selection - Custom Dropdown */}
+              {editingTask.projectId && getEditTaskKRs().length > 0 && (
+                <div>
+                  <label className="text-sm text-gray-500 font-medium mb-1 block">关联KR</label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditKrDropdownOpen(!isEditKrDropdownOpen)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-left text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 flex items-center justify-between"
+                    >
+                      <span className="block truncate">
+                        {editKrId
+                          ? getEditTaskKRs().find(kr => kr.id === editKrId)?.content || '不关联KR'
+                          : '不关联KR'}
+                      </span>
+                      <svg className={`w-4 h-4 text-gray-400 transition-transform ${isEditKrDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {isEditKrDropdownOpen && (
+                      <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        <div
+                          onClick={() => {
+                            setEditKrId('');
+                            setIsEditKrDropdownOpen(false);
+                          }}
+                          className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 ${!editKrId ? 'bg-primary/10 text-primary' : 'text-gray-700'}`}
+                        >
+                          不关联KR
+                        </div>
+                        {getEditTaskKRs().map(kr => (
+                          <div
+                            key={kr.id}
+                            onClick={() => {
+                              setEditKrId(kr.id);
+                              setIsEditKrDropdownOpen(false);
+                            }}
+                            className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 border-t border-gray-100 ${editKrId === kr.id ? 'bg-primary/10 text-primary' : 'text-gray-700'}`}
+                          >
+                            <div className="leading-relaxed">{kr.content}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               <div className="flex gap-3 pt-2">
                 <button
-                  onClick={() => setEditingTask(null)}
+                  onClick={() => { setEditingTask(null); setIsEditKrDropdownOpen(false); }}
                   className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-gray-600 font-medium"
                 >
                   取消
