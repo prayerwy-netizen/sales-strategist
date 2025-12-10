@@ -36,7 +36,7 @@ export const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
     const base64Data = await blobToBase64(audioBlob);
 
     const response = await getAI().models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-pro-preview',
       contents: {
         parts: [
           {
@@ -131,7 +131,7 @@ export const analyzeDailyReport = async (
     }
 
     const response = await getAI().models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-pro-preview',
       contents: prompt,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION_SHARP,
@@ -222,7 +222,7 @@ export const generateOKR = async (project: Project, existingOkr?: OKR, tasks?: T
     `;
 
     const response = await getAI().models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3-pro-preview',
         contents: prompt,
         config: {
             systemInstruction: SYSTEM_INSTRUCTION_SHARP,
@@ -325,7 +325,7 @@ export const generateProjectInsight = async (project: Project, tasks: Task[], ok
     `;
 
     const response = await getAI().models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-pro-preview',
       contents: prompt,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION_SHARP,
@@ -465,7 +465,7 @@ ${progressSummary}
 - 如果信息还不够，继续追问，不要输出JSON`;
 
     const response = await getAI().models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-pro-preview',
       contents: conversationHistory,
       config: {
         systemInstruction: systemPrompt
@@ -574,7 +574,7 @@ ${progressSummary}
 保持简洁，每次回复不超过3句话。`;
 
     const response = await getAI().models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-pro-preview',
       contents: conversationHistory,
       config: {
         systemInstruction: systemPrompt

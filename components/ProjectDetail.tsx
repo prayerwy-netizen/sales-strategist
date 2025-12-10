@@ -163,7 +163,7 @@ ${krList}
    - 确认预算范围和决策流程`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3-pro-preview',
         contents: [
           ...messages.map(m => ({
             role: m.role === 'model' ? 'model' : 'user',
