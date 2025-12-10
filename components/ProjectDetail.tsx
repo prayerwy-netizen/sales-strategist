@@ -161,7 +161,12 @@ ${krList}
    - 后天：准备方案PPT [KR:kr-id-here]
    - 本周五：发送报价单
    注意：[KR:xxx]是可选的，只有任务明显属于某个KR时才添加
-4. 如果用户提供了新的项目信息，帮他总结关键点
+4. 如果用户提供了新的项目信息（预算、决策人、竞品、下一步计划等），用【项目更新】标记列出，格式如：
+   【项目更新】
+   预算范围: 500万
+   关键决策人: 张总（技术部长）
+   竞品情况: 华为在跟进
+   下一步: 联系百度获取技术证明
 5. 如果用户要求生成KR、补充KR、或者你觉得需要新增KR来推进项目，用【新KR】标记列出，格式如：
    【新KR】
    - 本月内完成3次客户拜访
@@ -224,7 +229,7 @@ ${krList}
       }
 
       // Extract KRs if present
-      const krMatch = responseText.match(/【新KR】([\s\S]*?)(?=\n\n|$)/);
+      const krMatch = responseText.match(/【新KR】([\s\S]*?)(?=\n\n|【|$)/);
       if (krMatch) {
         const krLines = krMatch[1].split('\n').filter(line => line.trim().startsWith('-'));
         const extractedKRs = krLines.map(line => {
@@ -234,6 +239,32 @@ ${krList}
         if (extractedKRs.length > 0) {
           setPendingKRs(extractedKRs);
           setSelectedPendingKRs(extractedKRs.map((_, i) => i)); // 默认全选
+        }
+      }
+
+      // Extract project updates if present
+      const projectUpdateMatch = responseText.match(/【项目更新】([\s\S]*?)(?=\n\n|【|$)/);
+      if (projectUpdateMatch && onUpdateProject) {
+        const updateText = projectUpdateMatch[1];
+        const updates: any = {};
+
+        const budgetMatch = updateText.match(/预算范围[:：]\s*(.+)/);
+        if (budgetMatch) updates.budget = budgetMatch[1].trim();
+
+        const decisionMakerMatch = updateText.match(/关键决策人[:：]\s*(.+)/);
+        if (decisionMakerMatch) updates.decisionMaker = decisionMakerMatch[1].trim();
+
+        const competitorsMatch = updateText.match(/竞品情况[:：]\s*(.+)/);
+        if (competitorsMatch) updates.competitors = competitorsMatch[1].trim();
+
+        const nextStepMatch = updateText.match(/下一步[:：]\s*(.+)/);
+        if (nextStepMatch) updates.nextStep = nextStepMatch[1].trim();
+
+        const descriptionMatch = updateText.match(/项目描述[:：]\s*(.+)/);
+        if (descriptionMatch) updates.description = descriptionMatch[1].trim();
+
+        if (Object.keys(updates).length > 0) {
+          onUpdateProject({ ...project, ...updates });
         }
       }
 
