@@ -53,6 +53,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, tasks, okr, onBa
   const [editingTaskContent, setEditingTaskContent] = useState('');
   const [editingTaskDate, setEditingTaskDate] = useState('');
   const [editingTaskKrId, setEditingTaskKrId] = useState<string>('');
+  const [isKrDropdownOpen, setIsKrDropdownOpen] = useState(false);
 
   // AI Insight states
   const [aiInsight, setAiInsight] = useState<ProjectInsightResult | null>(null);
@@ -448,6 +449,7 @@ ${krList}
     setEditingTaskContent('');
     setEditingTaskDate('');
     setEditingTaskKrId('');
+    setIsKrDropdownOpen(false);
   };
 
   // Load AI Insight
@@ -1212,22 +1214,51 @@ ${krList}
                                 onChange={e => setEditingTaskDate(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-200 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-primary/20"
                             />
-                            {/* KR Selection */}
+                            {/* KR Selection - Custom Dropdown */}
                             {okr && okr.keyResults.length > 0 && (
                                 <div className="mb-4">
                                     <label className="text-xs text-gray-500 mb-1 block">关联KR</label>
-                                    <select
-                                        value={editingTaskKrId}
-                                        onChange={e => setEditingTaskKrId(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                    >
-                                        <option value="">不关联KR</option>
-                                        {okr.keyResults.map(kr => (
-                                            <option key={kr.id} value={kr.id}>
-                                                {kr.content.length > 30 ? kr.content.slice(0, 30) + '...' : kr.content}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <div className="relative">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsKrDropdownOpen(!isKrDropdownOpen)}
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-left text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 flex items-center justify-between"
+                                        >
+                                            <span className="block truncate">
+                                                {editingTaskKrId
+                                                    ? okr.keyResults.find(kr => kr.id === editingTaskKrId)?.content || '不关联KR'
+                                                    : '不关联KR'}
+                                            </span>
+                                            <svg className={`w-4 h-4 text-gray-400 transition-transform ${isKrDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                        {isKrDropdownOpen && (
+                                            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                                <div
+                                                    onClick={() => {
+                                                        setEditingTaskKrId('');
+                                                        setIsKrDropdownOpen(false);
+                                                    }}
+                                                    className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 ${!editingTaskKrId ? 'bg-primary/10 text-primary' : 'text-gray-700'}`}
+                                                >
+                                                    不关联KR
+                                                </div>
+                                                {okr.keyResults.map(kr => (
+                                                    <div
+                                                        key={kr.id}
+                                                        onClick={() => {
+                                                            setEditingTaskKrId(kr.id);
+                                                            setIsKrDropdownOpen(false);
+                                                        }}
+                                                        className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 border-t border-gray-100 ${editingTaskKrId === kr.id ? 'bg-primary/10 text-primary' : 'text-gray-700'}`}
+                                                    >
+                                                        <div className="leading-relaxed">{kr.content}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                             <div className="flex gap-2">
@@ -1237,6 +1268,7 @@ ${krList}
                                         setEditingTaskContent('');
                                         setEditingTaskDate('');
                                         setEditingTaskKrId('');
+                                        setIsKrDropdownOpen(false);
                                     }}
                                     className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-600"
                                 >
