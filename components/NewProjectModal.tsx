@@ -91,7 +91,11 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.API_KEY || '';
+      if (!apiKey) {
+        throw new Error('Gemini API Key 未配置');
+      }
+      const ai = new GoogleGenAI({ apiKey });
 
       const systemPrompt = `你是"销售军师"，正在帮用户创建一个新的ToB销售项目。
 
