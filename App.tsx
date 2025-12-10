@@ -307,7 +307,6 @@ const App: React.FC = () => {
             onProjectClick={setSelectedProject}
             onAddProject={handleOpenNewProjectModal}
             onUpdateProjectStage={handleUpdateStage}
-            onDeleteProject={handleDeleteProject}
           />
         )}
         {activeTab === 'me' && <MePage projects={projects} okrs={okrs} tasks={tasks} />}
@@ -372,6 +371,10 @@ const App: React.FC = () => {
             onEditTask={handleEditTask}
             onToggleTask={handleToggleTask}
             onDeleteTask={handleDeleteTask}
+            onDeleteProject={(projectId) => {
+              handleDeleteProject(projectId);
+              setSelectedProject(null);
+            }}
         />
       )}
 

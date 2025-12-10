@@ -7,7 +7,6 @@ interface ProjectKanbanProps {
   onProjectClick: (project: Project) => void;
   onAddProject: () => void;
   onUpdateProjectStage: (projectId: string, newStage: ProjectStage) => void;
-  onDeleteProject?: (projectId: string) => void;
 }
 
 const STAGES: ProjectStage[] = [
@@ -30,23 +29,8 @@ const STAGE_COLORS: Record<ProjectStage, string> = {
   '品牌管理': 'bg-indigo-100 text-indigo-700 border-indigo-200'
 };
 
-const ProjectKanban: React.FC<ProjectKanbanProps> = ({ projects, onProjectClick, onAddProject, onUpdateProjectStage, onDeleteProject }) => {
-  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+const ProjectKanban: React.FC<ProjectKanbanProps> = ({ projects, onProjectClick, onAddProject, onUpdateProjectStage }) => {
   const [collapsedStages, setCollapsedStages] = useState<Set<ProjectStage>>(new Set());
-
-  const handleDeleteClick = (e: React.MouseEvent, projectId: string) => {
-    e.stopPropagation();
-    setDeleteConfirmId(projectId);
-    setMenuOpenId(null);
-  };
-
-  const confirmDelete = () => {
-    if (deleteConfirmId && onDeleteProject) {
-      onDeleteProject(deleteConfirmId);
-    }
-    setDeleteConfirmId(null);
-  };
 
   const toggleStage = (stage: ProjectStage) => {
     setCollapsedStages(prev => {
@@ -132,23 +116,12 @@ const ProjectKanban: React.FC<ProjectKanbanProps> = ({ projects, onProjectClick,
                         draggable
                         onDragStart={(e) => handleDragStart(e, project.id)}
                         onClick={() => onProjectClick(project)}
-                        className="bg-gray-50 p-3 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors cursor-pointer active:scale-[0.98] relative group"
+                        className="bg-gray-50 p-3 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors cursor-pointer active:scale-[0.98]"
                       >
                         <div className="flex gap-2">
                           <div className="w-1 rounded-full flex-shrink-0 self-stretch" style={{ backgroundColor: project.color }}></div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <h4 className="font-bold text-gray-800 text-sm truncate flex-1">{project.name}</h4>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setMenuOpenId(menuOpenId === project.id ? null : project.id);
-                                }}
-                                className="p-1 -mr-1 -mt-1 opacity-0 group-hover:opacity-100 hover:bg-gray-200 rounded transition-opacity flex-shrink-0"
-                              >
-                                <MoreVertical size={14} className="text-gray-400" />
-                              </button>
-                            </div>
+                            <h4 className="font-bold text-gray-800 text-sm truncate">{project.name}</h4>
                             <div className="flex items-center justify-between mt-1">
                               <p className="text-xs text-gray-500">{project.clientName}</p>
                               <span className="text-[10px] px-1.5 py-0.5 bg-white text-gray-600 rounded border border-gray-200">
@@ -157,17 +130,6 @@ const ProjectKanban: React.FC<ProjectKanbanProps> = ({ projects, onProjectClick,
                             </div>
                           </div>
                         </div>
-                        {/* Dropdown Menu */}
-                        {menuOpenId === project.id && (
-                          <div className="absolute top-8 right-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1 min-w-[100px]">
-                            <button
-                              onClick={(e) => handleDeleteClick(e, project.id)}
-                              className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                            >
-                              <Trash2 size={14} /> 删除
-                            </button>
-                          </div>
-                        )}
                       </div>
                     ))
                   )}
@@ -177,40 +139,6 @@ const ProjectKanban: React.FC<ProjectKanbanProps> = ({ projects, onProjectClick,
           );
         })}
       </div>
-
-      {/* Delete Confirmation Modal */}
-      {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
-            <h3 className="text-lg font-bold text-gray-800 mb-2">确认删除</h3>
-            <p className="text-gray-600 mb-6">
-              确定要删除这个项目吗？相关的任务和OKR也会被删除，此操作无法撤销。
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteConfirmId(null)}
-                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-gray-600 font-medium hover:bg-gray-50"
-              >
-                取消
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600"
-              >
-                确认删除
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Click outside to close menu */}
-      {menuOpenId && (
-        <div
-          className="fixed inset-0 z-0"
-          onClick={() => setMenuOpenId(null)}
-        />
-      )}
     </div>
   );
 };

@@ -22,10 +22,12 @@ interface ProjectDetailProps {
   onEditTask?: (taskId: string, content: string, date: string, krId?: string) => void;
   onToggleTask?: (taskId: string) => void;
   onDeleteTask?: (taskId: string) => void;
+  onDeleteProject?: (projectId: string) => void;
 }
 
-const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, tasks, okr, onBack, onUpdateOKR, onUpdateProject, onAddTask, onEditTask, onToggleTask, onDeleteTask }) => {
+const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, tasks, okr, onBack, onUpdateOKR, onUpdateProject, onAddTask, onEditTask, onToggleTask, onDeleteTask, onDeleteProject }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'okr' | 'tasks' | 'chat'>('overview');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     { id: '1', role: 'model', content: `我是你的销售军师。关于【${project.name}】这个项目，你可以：\n\n1. 告诉我项目进展，我帮你分析\n2. 问我客户可能在想什么\n3. 让我帮你梳理下一步行动\n4. 说"生成任务"我会帮你创建待办\n\n现在，说说情况吧。` }
   ]);
@@ -578,6 +580,14 @@ ${krList}
             <h1 className="font-bold text-lg text-gray-900 leading-tight">{project.name}</h1>
             <span className="text-xs text-gray-500">{project.clientName} · {project.stage}</span>
         </div>
+        {onDeleteProject && (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+          >
+            删除
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -1516,6 +1526,37 @@ ${krList}
             </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
+            <h3 className="text-lg font-bold text-gray-800 mb-2">确认删除项目</h3>
+            <p className="text-gray-600 mb-6">
+              确定要删除【{project.name}】吗？所有相关的任务、OKR 和进展记录都将被永久删除，此操作无法撤销。
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-gray-600 font-medium hover:bg-gray-50"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => {
+                  if (onDeleteProject) {
+                    onDeleteProject(project.id);
+                  }
+                  setShowDeleteConfirm(false);
+                }}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600"
+              >
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
