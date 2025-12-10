@@ -146,16 +146,76 @@ export const deleteProject = async (projectId: string): Promise<boolean> => {
   const supabase = getSupabase();
   if (!supabase) return true;
 
-  const { error } = await supabase
-    .from('projects')
-    .delete()
-    .eq('id', projectId);
+  try {
+    // 1. 删除关联的任务
+    const { error: tasksError } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('project_id', projectId);
 
-  if (error) {
-    console.error('Error deleting project:', error);
+    if (tasksError) {
+      console.error('Error deleting tasks:', tasksError);
+    }
+
+    // 2. 获取项目的 OKRs
+    const { data: okrs, error: okrsQueryError } = await supabase
+      .from('okrs')
+      .select('id')
+      .eq('project_id', projectId);
+
+    if (okrsQueryError) {
+      console.error('Error querying OKRs:', okrsQueryError);
+    }
+
+    // 3. 删除所有关联的 Key Results
+    if (okrs && okrs.length > 0) {
+      const okrIds = okrs.map(o => o.id);
+      const { error: krsError } = await supabase
+        .from('key_results')
+        .delete()
+        .in('okr_id', okrIds);
+
+      if (krsError) {
+        console.error('Error deleting key results:', krsError);
+      }
+    }
+
+    // 4. 删除 OKRs
+    const { error: okrsError } = await supabase
+      .from('okrs')
+      .delete()
+      .eq('project_id', projectId);
+
+    if (okrsError) {
+      console.error('Error deleting OKRs:', okrsError);
+    }
+
+    // 5. 删除进展记录
+    const { error: progressError } = await supabase
+      .from('progress_entries')
+      .delete()
+      .eq('project_id', projectId);
+
+    if (progressError) {
+      console.error('Error deleting progress entries:', progressError);
+    }
+
+    // 6. 最后删除项目
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', projectId);
+
+    if (error) {
+      console.error('Error deleting project:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in deleteProject:', error);
     return false;
   }
-  return true;
 };
 
 // ==================== Progress Entries ====================
