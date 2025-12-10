@@ -126,7 +126,11 @@ ${progressSummary}
     const wantsTask = /生成任务|创建任务|添加任务|帮我列|列出.*任务|下一步|行动计划|to.?do/i.test(userMessage);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.API_KEY || '';
+      if (!apiKey) {
+        throw new Error('Gemini API Key 未配置');
+      }
+      const ai = new GoogleGenAI({ apiKey });
 
       // Build KR list for AI to reference
       const krList = okr ? okr.keyResults.map((kr, i) => `KR${i+1}: ${kr.content} (ID:${kr.id})`).join('\n') : '暂无KR';
