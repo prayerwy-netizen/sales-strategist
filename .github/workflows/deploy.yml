@@ -36,9 +36,14 @@ jobs:
           SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           GEMINI_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
         run: |
-          echo "VITE_SUPABASE_URL=${SUPABASE_URL}" > .env
-          echo "VITE_SUPABASE_ANON_KEY=${SUPABASE_KEY}" >> .env
-          echo "VITE_GEMINI_API_KEY=${GEMINI_KEY}" >> .env
+          # Strip any "KEY=" prefix if the secret was saved with it
+          CLEAN_URL="${SUPABASE_URL#*=}"
+          CLEAN_KEY="${SUPABASE_KEY#*=}"
+          CLEAN_GEMINI="${GEMINI_KEY#*=}"
+          # Create .env file with clean values
+          echo "VITE_SUPABASE_URL=${CLEAN_URL}" > .env
+          echo "VITE_SUPABASE_ANON_KEY=${CLEAN_KEY}" >> .env
+          echo "VITE_GEMINI_API_KEY=${CLEAN_GEMINI}" >> .env
 
       - name: Build
         run: npm run build
