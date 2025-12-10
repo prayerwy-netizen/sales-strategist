@@ -1309,9 +1309,10 @@ ${krList}
                     </div>
                 )}
 
-                {/* 未关联KR的任务 */}
+                {/* 未关联KR的任务（包括krId无效的任务） */}
                 {(() => {
-                    const unlinkedTasks = tasks.filter(t => !t.krId);
+                    const validKrIds = okr ? okr.keyResults.map(kr => kr.id) : [];
+                    const unlinkedTasks = tasks.filter(t => !t.krId || !validKrIds.includes(t.krId));
                     if (unlinkedTasks.length === 0 && (!okr || okr.keyResults.length === 0)) {
                         return <div className="text-center mt-20 text-gray-400">暂无任务</div>;
                     }
